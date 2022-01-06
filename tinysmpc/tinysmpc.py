@@ -82,11 +82,16 @@ class SharedScalar():
         res = self
         for _ in range(other-1): res *= self
         return res
-    
+
+    def __xor__(self, other):
+        '''Called by: self ^ other. Only implemented self and other are either 0 or 1 (fails weirdly if that is not true).'''
+        return self + other - (2 * (self * other))
+        
     def __gt__(self, other):
         '''Called by: self > other. Only implemented when other is a public integer.'''
-        assert isinstance(other, int)
         return greater_than(self, other)
+
+    # TODO: implement equality
     
     def __repr__(self):
         return 'SharedScalar\n - ' + '\n - '.join(map(str, self.shares))
