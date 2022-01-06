@@ -52,23 +52,26 @@ def greater_than(x_sh, y_sh):
     '''Provides the high-level API for comparing x_sh (SharedScalar) > pub (int).
        This basically does some TinySMPC-specific setup before calling PrivateCompare.'''
     # overriding this for the purpose of MPC class
-    return _private_compare_without_decomp(x_sh, y_sh)
+    if (not isinstance(x_sh, int) and x_sh.Q is not None) or (not isinstance(y_sh, int) and y_sh.Q is not None):
+        return _private_compare_without_decomp(x_sh, y_sh)
 
-    #assert len(x_sh.owners) == 2, 'PrivateCompare only works for 2-party shares'
-    #
-    ## Reconstruct the private value on a temporary VM (see the Security Note above)
-    #from .tinysmpc import VirtualMachine
-    #tmp_vm = VirtualMachine('tmp_vm')
-    #x = x_sh.reconstruct(tmp_vm).value
-    #
-    ## The paper's implementation only works on positive numbers, but we want negatives too!
-    ## So, just shift TinySMPC's int64s into the positive range (int64 + -MIN_INT64).
-    #if pub < 0 or x < 0: pub += -MIN_INT64; x += -MIN_INT64
-    #
-    ## Decompose x into its bit representation, and share each bit independently
-    #x_sh = _share_bitwise(x, list(x_sh.owners))
-    #
-    #return _private_compare(x_sh, pub)
+    else:
+        pub = y_sh
+        assert len(x_sh.owners) == 2, 'PrivateCompare only works for 2-party shares'
+        
+        # Reconstruct the private value on a temporary VM (see the Security Note above)
+        from .tinysmpc import VirtualMachine
+        tmp_vm = VirtualMachine('tmp_vm')
+        x = x_sh.reconstruct(tmp_vm).value
+        
+        # The paper's implementation only works on positive numbers, but we want negatives too!
+        # So, just shift TinySMPC's int64s into the positive range (int64 + -MIN_INT64).
+        if pub < 0 or x < 0: pub += -MIN_INT64; x += -MIN_INT64
+        
+        # Decompose x into its bit representation, and share each bit independently
+        x_sh = _share_bitwise(x, list(x_sh.owners))
+        
+        return _private_compare(x_sh, pub)
 
 def _tmpreconstr(share):
     # TODO remove
@@ -129,8 +132,11 @@ def _private_compare_without_decomp(x_sh, y_sh):
     # A necessary evil; see the "small hack" note above
     from .tinysmpc import PrivateScalar, SharedScalar, VirtualMachine
 
-    assert x_sh.Q is not None or y_sh.Q is not None, "Q must be prime" # hack: assume Q is prime if it is not None
-    q = x_sh.Q if isinstance(x_sh, SharedScalar) else y_sh.Q
+    # Need at least x_sh to be a compare
+    assert x_sh.Q is not None, "x_sh must have prime Q"
+    assert isinstance(y_sh, int) or y_sh.Q == x_sh.Q
+    
+    q = x_sh.Q
 
     w = _lt_halfprime(y_sh, q)
     x = _lt_halfprime(x_sh, q)

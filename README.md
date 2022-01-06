@@ -70,7 +70,7 @@ Here's a summary of the encrypted operations that TinySMPC supports.
 | **Multiplication** | ✅                       | [SPDZ](https://eprint.iacr.org/2011/535.pdf) algorithm.  <br/> See [shared_multiplication.py](https://github.com/kennysong/tinysmpc/blob/master/tinysmpc/shared_multiplication.py) |
 | **Division**       | ❌ (too complicated)     | Possible with [SecureNN](https://eprint.iacr.org/2018/442.pdf).                                                                                       |
 | **Exponentiation**       | ✅ (public integer only)     | In terms of multiplication.                                                                                       |
-| **Greater Than**   | ✅ (public integer only) | [SecureNN](https://eprint.iacr.org/2018/442.pdf) algorithm. <br/> See [shared_comparison.py](https://github.com/kennysong/tinysmpc/blob/master/tinysmpc/shared_comparison.py)     |
+| **Greater Than**   | ✅ (prime moduli)<br/> ✅  (int64 moduli: 2-party, public integer comparison only) | [Sharemind](https://sharemind.cyber.ee/files/papers/sharemind_with_shamir_turban_2014.pdf) algorithm. <br/> [SecureNN](https://eprint.iacr.org/2018/442.pdf) algorithm.     |
 
 ## Repo Structure
 
