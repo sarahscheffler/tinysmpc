@@ -87,7 +87,7 @@ def _lsb(x_sh):
     tmp_vm = VirtualMachine('tmp_vm') # extra machine as a hack to generate randomness; see Security Note
     ra_n = rand_element(x_sh.Q)
     ra = PrivateScalar(ra_n, tmp_vm).share(list(x_sh.owners), x_sh.Q)
-    rb = _share_bitwise(ra_n, list(x_sh.owners), floor(log2(x_sh.Q)+1))
+    rb = _share_bitwise(ra_n, list(x_sh.owners), l=floor(log2(x_sh.Q)+1), p=x_sh.Q)
 
     l = len(rb)
 
@@ -121,7 +121,15 @@ def _lt_halfprime(x_sh, q=None):
     # Hack: assume x_sh is either an int or a SharedScalar
     assert (not isinstance(x_sh, int) or q is not None), "Either need x_sh SharedScalar, or to set q"
     if isinstance(x_sh, int): 
-        return 1 if x_sh < q else 0
+        tmp_vm = VirtualMachine('tmp_vm')
+        if x_sh < q/2:
+            one = PrivateScalar(1, tmp_vm)
+            one_shared = one.share(list(x_sh.owners), Q=q)
+            return one_shared
+        else:
+            zero = PrivateScalar(0, tmp_vm)
+            zero_shared = zero.share(list(x_sh.owners), Q=q)
+            return zero_shared
     else:
         return -1*_lsb(2 * x_sh) + 1
 
@@ -207,12 +215,13 @@ def _private_compare(x_sh, r, β=None):
     # Return x > r
     return PrivateScalar(β ^ β_prime, p2)    
     
-def _share_bitwise(n, machines, l=L):
+def _share_bitwise(n, machines, l=L, p=P):
+    # TODO: Do I need to change P?
     '''Split integer n into bitwise secret shares, returns a list of SharedScalars (one per bit).'''
     from .tinysmpc import PrivateScalar
     bits = _get_bits(n, l)
     ps_bits = [PrivateScalar(bit, machines[0]) for bit in bits]
-    sh_bits = [ps_bit.share(machines, P) for ps_bit in ps_bits]
+    sh_bits = [ps_bit.share(machines, p) for ps_bit in ps_bits]
     return sh_bits
 
 def _get_bits(n, l=L):
