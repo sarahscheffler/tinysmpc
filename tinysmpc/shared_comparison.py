@@ -121,16 +121,7 @@ def _lt_halfprime(x_sh, q=None):
     # Hack: assume x_sh is either an int or a SharedScalar
     assert (not isinstance(x_sh, int) or q is not None), "Either need x_sh SharedScalar, or to set q"
     if isinstance(x_sh, int): 
-        from .tinysmpc import VirtualMachine, PrivateScalar, SharedScalar
-        tmp_vm = VirtualMachine('tmp_vm')
-        if x_sh < q/2:
-            one = PrivateScalar(1, tmp_vm)
-            one_shared = one.share(list(x_sh.owners), Q=q)
-            return one_shared
-        else:
-            zero = PrivateScalar(0, tmp_vm)
-            zero_shared = zero.share(list(x_sh.owners), Q=q)
-            return zero_shared
+        return 1 if x_sh < q/2 else 0
     else:
         return -1*_lsb(2 * x_sh) + 1
 
